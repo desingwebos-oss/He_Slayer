@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","cannon-es":"https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js","./js/SaveSystem.js":"./js/SaveSystem.js?v=4.7","./js/UIManager.js":"./js/UIManager.js?v=4.7","./js/AudioEngine.js":"./js/AudioEngine.js?v=4.7","./js/PlayerController.js":"./js/PlayerController.js?v=4.7","./js/DemogorgonAI.js":"./js/DemogorgonAI.js?v=4.7","./js/LevelManager.js":"./js/LevelManager.js?v=4.7","./js/MobileControls.js":"./js/MobileControls.js?v=4.7","./js/PlasmaWeapon.js":"./js/PlasmaWeapon.js?v=4.7","./js/HelenaCharacter.js":"./js/HelenaCharacter.js?v=4.7","./js/Textures.js":"./js/Textures.js?v=4.7","./js/levels/Level1_Mansion.js":"./js/levels/Level1_Mansion.js?v=4.7","./js/levels/Level2_Escuela.js":"./js/levels/Level2_Escuela.js?v=4.7","./js/levels/Level3_Hospital.js":"./js/levels/Level3_Hospital.js?v=4.7","./js/levels/Level4_Pueblo.js":"./js/levels/Level4_Pueblo.js?v=4.7"}}
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","cannon-es":"https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js","./js/SaveSystem.js":"./js/SaveSystem.js?v=4.8","./js/UIManager.js":"./js/UIManager.js?v=4.8","./js/AudioEngine.js":"./js/AudioEngine.js?v=4.8","./js/PlayerController.js":"./js/PlayerController.js?v=4.8","./js/DemogorgonAI.js":"./js/DemogorgonAI.js?v=4.8","./js/LevelManager.js":"./js/LevelManager.js?v=4.8","./js/MobileControls.js":"./js/MobileControls.js?v=4.8","./js/PlasmaWeapon.js":"./js/PlasmaWeapon.js?v=4.8","./js/HelenaCharacter.js":"./js/HelenaCharacter.js?v=4.8","./js/Textures.js":"./js/Textures.js?v=4.8","./js/levels/Level1_Mansion.js":"./js/levels/Level1_Mansion.js?v=4.8","./js/levels/Level2_Escuela.js":"./js/levels/Level2_Escuela.js?v=4.8","./js/levels/Level3_Hospital.js":"./js/levels/Level3_Hospital.js?v=4.8","./js/levels/Level4_Pueblo.js":"./js/levels/Level4_Pueblo.js?v=4.8"}}
 </script>
 
 <style>
@@ -22,6 +22,8 @@ html,body{margin:0;background:#0b0716;color:#fff;font-family:system-ui,Arial;ove
 .screen{position:absolute;inset:0;overflow-y:auto;display:none;background:#0b0716;z-index:5}
 .screen.active{display:block !important}
 #gameWrap:has(#hud.show) .screen{display:none !important}
+#objective{display:none}
+#gameWrap:has(#hud.show) #objective{display:block}
 #diagBox{position:fixed;left:10px;bottom:10px;z-index:100;background:rgba(0,0,0,.85);border:1px solid #a855f7;border-radius:10px;padding:8px 10px;font-size:11px;max-width:320px;display:none;white-space:pre-wrap}
 </style>
 <script>
@@ -74,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <button class="btn btn-dark" id="btnFullHome" onclick="try{document.documentElement.requestFullscreen()}catch(e){}">⛶ FULLSCREEN</button>
     </div>
     <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap" class="small"><span>⭐ <b id="totalStars">0 / 12</b></span><span>🗺️ <b id="lvlUnlocked">1 de 4</b></span><span>📁 Modular: main / LevelManager / Player / Demogorgon / Audio / UI / Save</span></div>
-  </div></div>
+  </div></div></div>
   <div class="cards">
     <div class="card"><div style="font-size:28px">📁</div><b>Arquitectura modular</b><p class="small">Cada sistema en su archivo. Para agregar Nivel 2 solo creas <code>Level2_Escuela.js</code> y lo registras en LevelManager.</p></div>
     <div class="card"><div style="font-size:28px">👹</div><b>Demogorgon FSM</b><p class="small">Patrulla → Investiga por sonido → Persecución → Ataque. Pétalos que se abren al cazar.</p></div>
@@ -114,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </div>
 <div id="diagBox"></div>
 <script>window.__helenaLoaded=false;</script>
-<script type="module" src="js/main.js?v=4.7"></script>
+<script type="module" src="js/main.js?v=4.8"></script>
 </body>
 </html>
 
