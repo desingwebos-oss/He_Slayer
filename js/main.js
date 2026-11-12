@@ -1,20 +1,6 @@
-// main.js v4.2 FIX PANTALLA NEGRA - Tercera persona RE4 + Plasma + Niveles 1-4 + Catch de errores
-// v4.5: THREE y CANNON se cargan dinamico con fallback, para que el menu no dependa del CDN
-let THREE=null, CANNON=null;
-async function load3D(){
-  const triesThree=['https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js','https://unpkg.com/three@0.160.0/build/three.module.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js'];
-  const triesCannon=['https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js','https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js'];
-  let lastErr=null;
-  for(const u of triesThree){ try{ THREE=await import(/* @vite-ignore */ u); break; }catch(e){ lastErr=e; } }
-  if(!THREE) throw new Error('No se pudo cargar Three.js desde ningun CDN. Revisa tu internet. ('+(lastErr&&lastErr.message||'')+')');
-  for(const u of triesCannon){ try{ CANNON=await import(/* @vite-ignore */ u); break; }catch(e){ lastErr=e; } }
-  if(!CANNON) throw new Error('No se pudo cargar cannon-es.');
-  // Exponer para los modulos que ya importan THREE (LevelManager etc usan import estatico, por eso los cargamos despues)
-  window.__THREE=THREE; window.__CANNON=CANNON;
-  return true;
-}
-// Los demas modulos (LevelManager, etc) siguen usando import estatico de 'three', por eso main.js ya no los importa arriba.
-// En v4.5, el juego 3D se carga solo al dar ENTRAR, con load3D() + import dinamico de LevelManager.
+// main.js v5.0 - Animación de disparo + Botón izquierdo + Linterna Sigilo + Noche clara + BloodFX
+import * as THREE from 'three';
+window.__THREE = THREE;
 
 import { SaveSystem } from './SaveSystem.js';
 import { UIManager } from './UIManager.js';
@@ -25,7 +11,7 @@ import { LevelManager, LEVELS } from './LevelManager.js';
 import { MobileControls } from './MobileControls.js';
 import { PlasmaWeapon } from './PlasmaWeapon.js';
 import { HelenaCharacter } from './HelenaCharacter.js';
-// CANNON dinamico arriba
+import { BloodFX } from './BloodFX.js';
 
 const save=new SaveSystem();
 const ui=new UIManager(save);
@@ -38,58 +24,96 @@ window.addEventListener('error',e=>{
   const box=document.getElementById('msgBox');
   if(box && !document.getElementById('msg')?.classList.contains('show')){
     const msg=document.getElementById('msg'); if(msg) msg.classList.add('show');
-    box.innerHTML=`<h2>⚠️ Ups, algo falló</h2><p class="small">${(e.message||'Error').slice(0,200)}</p><p class="small">Recarga con ?v=4.4 y asegúrate de subir TODOS los archivos del ZIP (no solo index.html).</p><button class="btn-gold" onclick="location.reload()">🔄 Recargar</button><button class="btn-ghost" onclick="document.getElementById('msg').classList.remove('show');document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('home').classList.add('active')">← Volver a Inicio</button>`;
+    box.innerHTML=`<h2>⚠️ Ups, algo falló</h2><p class="small">${(e.message||'Error').slice(0,200)}</p><p class="small">Recarga con ?v=5.0 y asegúrate de subir TODOS los archivos del ZIP (no solo index.html).</p><button class="btn-gold" onclick="location.reload()">🔄 Recargar</button><button class="btn-ghost" onclick="document.getElementById('msg').classList.remove('show');document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('home').classList.add('active')">← Volver a Inicio</button>`;
   }
 });
 
 function showLevels(){ try{ ui.renderLevels(idx=>ui.showIntro(idx, startLevel)); const ok=ui.show('levels'); if(!ok) throw new Error('No existe #levels en index.html'); }catch(err){ console.error(err); alert('Error al abrir niveles: '+err.message+'\nVolviendo a Inicio.'); ui.show('home'); } }
 function playNow(){ try{ ui.showIntro(0, startLevel); }catch(err){ console.error(err); ui.show('home'); } }
-async function startLevel(idx){
+function startLevel(idx){
   try{
-    if(!THREE){ const m=document.getElementById('msgBox'); if(m){ /* mostrar cargando */ } ui.showMessage(`<h2>⏳ Cargando 3D...</h2><p class="small">Descargando Three.js... si tu internet esta lento, espera unos segundos.</p>`); try{ await load3D(); }catch(e){ ui.hideMessage(); ui.show('home'); ui.showMessage(`<h2>⚠️ Sin 3D por ahora</h2><p class="small">${e.message}</p><p class="small">El menu (JUGAR / NIVELES / COMO JUGAR) si funciona sin 3D. Para jugar el 3D necesitas internet para descargar Three.js una vez.</p><button class="btn-gold" onclick="document.getElementById('msg').classList.remove('show')">← Volver a Inicio</button>`); return; } ui.hideMessage(); }
-
     ui.hideMessage(); ui.showGameUI();
     if(game) game.destroy();
-    game=new Game(idx);
-    ui.showMessage(`<h2>${LEVELS[idx].emoji} Nivel ${idx+1}</h2><p class="small">${LEVELS[idx].story}</p><p><b>🎯 ${LEVELS[idx].keys?LEVELS[idx].keys+' llaves ':''}${LEVELS[idx].gens?LEVELS[idx].gens+' generadores ':''} + Puerta dorada</b></p><p class="small">🎥 Cámara en 3ra persona estilo RE4: ves a Helena por la espalda. 🔫 Tu plasma ya está en tu mano.</p><button class="btn-gold" id="btnGo">¡Vamos, Helena!</button>`,false);
+    game=new Game(idx); window.__game=game;
+    ui.showMessage(`<h2>${LEVELS[idx].emoji} Nivel ${idx+1}</h2><p class="small">${LEVELS[idx].story}</p><p><b>🎯 ${LEVELS[idx].keys?LEVELS[idx].keys+' llaves ':''}${LEVELS[idx].gens?LEVELS[idx].gens+' generadores ':''} + Puerta dorada</b></p><p class="small">🎥 Cámara en 3ra persona estilo RE4. 🔫 Disparo de plasma en botón IZQUIERDO. 🔦 Apaga la linterna para que el monstruo NO te vea.</p><button class="btn-gold" id="btnGo">¡Vamos, Helena!</button>`,false);
     const btn=document.getElementById('btnGo'); if(btn) btn.onclick=()=>{ ui.hideMessage(); game.paused=false; };
     game.paused=true;
   }catch(err){
     console.error(err);
     ui.hideGameUI(); ui.show('home');
-    ui.showMessage(`<h2>⚠️ No se pudo cargar el nivel</h2><p class="small">${err.message}</p><p class="small">Falta un archivo en GitHub. Sube TODO el ZIP v4.4 y recarga con ?v=4.4</p><button class="btn-gold" onclick="location.reload()">🔄 Recargar</button><button class="btn-ghost" onclick="document.getElementById('msg').classList.remove('show')">← Volver a Inicio</button>`);
+    ui.showMessage(`<h2>⚠️ No se pudo cargar el nivel</h2><p class="small">${err.message}</p><button class="btn-gold" onclick="location.reload()">🔄 Recargar</button><button class="btn-ghost" onclick="document.getElementById('msg').classList.remove('show')">← Volver a Inicio</button>`);
   }
 }
+window.startLevel = startLevel;
+
+let toastEl=null, toastT=0;
+function toast(t){
+  if(!toastEl){ toastEl=document.createElement('div'); toastEl.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);border:1px solid #00e5ff;padding:8px 16px;border-radius:999px;font-weight:800;font-size:13px;z-index:45;pointer-events:none;display:none;color:#fff;box-shadow:0 0 14px rgba(0,229,255,0.4)'; document.body.appendChild(toastEl); }
+  toastEl.textContent=t; toastEl.style.display='block'; clearTimeout(toastT); toastT=setTimeout(()=>{ toastEl.style.display='none'; },1800);
+}
+window.toast = toast;
+
 class Game {
   constructor(idx){
     this.idx=idx; this.lv=LEVELS[idx]; this.paused=true; this.over=false; this.exitOpen=false; this.elapsed=0; this.ms=0; this.cameraShake=0;
-    this.scene=new THREE.Scene(); this.scene.background=new THREE.Color(0x0e1526); this.scene.fog=new THREE.Fog(0x0e1526,18,95);
+    // Tema de noche mas clara y legible
+    this.scene=new THREE.Scene();
+    this.scene.background=new THREE.Color(0x131d33);
+    this.scene.fog=new THREE.Fog(0x131d33,26,115);
     this.camera=new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 300); this.camera.position.set(0,1.7,36); this.scene.add(this.camera);
     const canvas=document.getElementById('gameCanvas');
     if(!canvas) throw new Error('No existe #gameCanvas en index.html');
     this.renderer=new THREE.WebGLRenderer({canvas, antialias:true}); this.renderer.setSize(innerWidth, innerHeight); this.renderer.setPixelRatio(Math.min(1.5, devicePixelRatio||1)); this.renderer.shadowMap.enabled=true;
-    this.scene.add(new THREE.AmbientLight(0x8a8aff,0.7));
-    const moon=new THREE.DirectionalLight(0xfff2cc,0.7); moon.position.set(20,30,10); this.scene.add(moon);
-    this.flash=new THREE.SpotLight(0xfff2cc,1.6,38,0.55,0.5,1); this.flash.position.set(0,1.7,36); this.scene.add(this.flash); this.scene.add(this.flash.target);
-    this.world=new CANNON.World({gravity:new CANNON.Vec3(0,-9.82,0)});
+    // Iluminacion ambiental nocturna mas clara
+    this.scene.add(new THREE.AmbientLight(0x9cb6e0,1.45));
+    const moon=new THREE.DirectionalLight(0xdde8ff,1.5); moon.position.set(25,45,15); this.scene.add(moon);
+    const rim=new THREE.DirectionalLight(0x556e99,0.65); rim.position.set(-25,20,-25); this.scene.add(rim);
+    // Linterna potente visible que al apagarse oculta al jugador
+    this.flash=new THREE.SpotLight(0xfff2cc,22,48,Math.PI/4,0.35,1.2);
+    this.flash.position.set(0,1.7,36); this.scene.add(this.flash); this.scene.add(this.flash.target);
+    this.flashGlow=new THREE.PointLight(0xffeedd,3.5,9); this.scene.add(this.flashGlow);
     this.levelManager=new LevelManager(this.scene);
     this.levelData=this.levelManager.load(idx);
     // Helena en 3ra persona
     this.helena=new HelenaCharacter(this.scene);
     this.helena.group.position.set(this.levelData.spawn.x,0,this.levelData.spawn.z);
-    this.player=new PlayerController(this.camera, this.flash, mobile, audio, this.helena);
+    this.player=new PlayerController(this.camera, this.flash, mobile, audio, this.helena, this.flashGlow);
     this.player.pos.copy(this.helena.group.position);
     this.monster=new DemogorgonAI(this.scene, idx, audio);
     if(this.levelData.monsterSpawn) this.monster.group.position.set(this.levelData.monsterSpawn.x,0,this.levelData.monsterSpawn.z);
     this.plasma=new PlasmaWeapon(this.scene, this.camera, audio);
+    this.blood=new BloodFX(this.scene); this.blood.enabled=!!save.data.settings.blood;
+    this.player.onView=()=>this.toggleView(); this.player.onBlood=()=>this.toggleBlood();
+    this.applyView(save.data.settings.view||'third', false);
     this.player.onInteract=()=>this.tryInteract();
     this.player.onPause=()=>this.togglePause();
-    // Mobile: todos los botones son null-safe ahora
-    mobile.bindButtons({ onHide:()=>this.tryHide(), onLight:()=>this.player.toggleLight(), onInteract:()=>this.tryInteract(), onPause:()=>this.togglePause(), onCrouch:(v)=>{this.player.crouching=v;}, onShoot:()=>this.shoot(), onTapStart:()=>audio.ensure() });
+    // Mobile: todos los botones son null-safe
+    mobile.bindButtons({ onView:()=>this.toggleView(), onHide:()=>this.tryHide(), onLight:()=>this.player.toggleLight(), onInteract:()=>this.tryInteract(), onPause:()=>this.togglePause(), onCrouch:(v)=>{this.player.crouching=v;}, onShoot:()=>this.shoot(), onTapStart:()=>audio.ensure() });
     this.last=performance.now(); this.raf=requestAnimationFrame(this.loop.bind(this));
     window.addEventListener('resize', this.onResize=()=>{ this.renderer.setSize(innerWidth,innerHeight); this.camera.aspect=innerWidth/innerHeight; this.camera.updateProjectionMatrix(); });
   }
-  shoot(){ if(this.paused||this.over) return; this.plasma.shoot(this.camera, this.player.pos, this.monster); }
+  applyView(v, announce=true){
+    this.player.view=v; this.helena.group.visible=(v!=='first'); this.plasma.setFirstPerson(v==='first');
+    save.data.settings.view=v; save.save();
+    const b=document.getElementById('btnView'); if(b) b.textContent=v==='first'?'👁️':'🧍';
+    if(announce) toast(v==='first'?'👁️ Primera persona (ves el arma)':'🧍 Tercera persona (ves a Helena)');
+  }
+  toggleView(){ this.applyView(this.player.view==='first'?'third':'first'); }
+  toggleBlood(){ this.blood.enabled=!this.blood.enabled; save.data.settings.blood=this.blood.enabled; save.save(); toast(this.blood.enabled?'🩸 Efectos de sangre: ON':'🩸 Efectos de sangre: OFF'); }
+  shoot(){
+    if(this.paused||this.over) return;
+    if(!this.plasma.canShoot()) return;
+    if(this.helena && this.helena.triggerShoot) this.helena.triggerShoot();
+    this.cameraShake = 0.16;
+    const r=this.plasma.shoot(this.camera, this.player.pos, this.monster);
+    if(r && r.hit){
+      this.monster.flashHit();
+      const mp=this.monster.group.position, sc=this.monster.cfg.scale, at={x:mp.x,y:2.2*sc,z:mp.z};
+      const d=r.dir||{x:0,z:0}, dead=this.monster.lastHitDead;
+      this.blood.burst(at, {x:d.x*0.5,z:d.z*0.5}, dead?70:16, dead?2.2:1);
+      if(dead) for(let i=0;i<8;i++) this.blood.splat(mp.x+(Math.random()-.5)*4, mp.z+(Math.random()-.5)*4, 0.7+Math.random()*0.8);
+    }
+  }
   tryHide(){
     const near=this.levelData.hideSpots.some(h=>Math.hypot(h.x-this.player.pos.x,h.z-this.player.pos.z)<3.5);
     if(!this.player.toggleHide(near)){ /* no hay escondite cerca */ }
@@ -120,7 +144,15 @@ class Game {
     const r=document.getElementById('btnRetry'); if(r) r.onclick=()=>{ ui.hideMessage(); ui.hideGameUI(); startLevel(this.idx); };
     const h=document.getElementById('btnHome2'); if(h) h.onclick=()=>{ ui.hideMessage(); ui.hideGameUI(); ui.show('home'); };
   }
-  togglePause(){ if(this.over) return; this.paused=!this.paused; if(this.paused) ui.showMessage(`<h2>⏸️ Pausa</h2><button class="btn-gold" id="btnResume">▶ Seguir</button>`,false); const b=document.getElementById('btnResume'); if(b) b.onclick=()=>{ ui.hideMessage(); this.paused=false; }; }
+  togglePause(){
+    if(this.over) return; this.paused=!this.paused;
+    if(!this.paused){ ui.hideMessage(); return; }
+    ui.showMessage(`<h2>⏸️ Pausa</h2><button class="btn-gold" id="btnResume">▶ Seguir</button><button class="btn-ghost" id="btnPView" style="margin-top:8px"></button><button class="btn-ghost" id="btnPBlood" style="margin-top:8px"></button>`,false);
+    const b=document.getElementById('btnResume'); if(b) b.onclick=()=>{ ui.hideMessage(); this.paused=false; };
+    const pv=document.getElementById('btnPView'), pb=document.getElementById('btnPBlood');
+    const lab=()=>{ if(pv) pv.textContent=this.player.view==='first'?'👁️ Vista: 1ra persona (arma)':'🧍 Vista: 3ra persona (Helena)'; if(pb) pb.textContent='🩸 Sangre del monstruo: '+(this.blood.enabled?'ON':'OFF'); };
+    if(pv) pv.onclick=()=>{ this.toggleView(); lab(); }; if(pb) pb.onclick=()=>{ this.toggleBlood(); lab(); }; lab();
+  }
   loop(now){
     this.raf=requestAnimationFrame(this.loop.bind(this));
     const dt=Math.min(50, now-this.last); this.last=now;
@@ -128,7 +160,7 @@ class Game {
     this.elapsed+=dt/1000; this.ms+=dt;
     const {fx,fz}=this.player.update(dt, this.levelData.colliders);
     const m=this.monster.update(dt, this.player, this.levelData.colliders);
-    this.plasma.update(dt);
+    this.plasma.update(dt); this.blood.update(dt);
     // Recoger llaves (distancia a Helena, no a la camara)
     const p=this.player.pos;
     this.levelData.pickups.forEach(pk=>{
@@ -146,7 +178,8 @@ class Game {
     const distExit=Math.hypot(this.levelData.exitPos.x-p.x, this.levelData.exitPos.z-p.z); const distSpawn=Math.hypot(this.levelData.spawn.x-p.x, this.levelData.spawn.z-p.z);
     const zone = distExit<8 ? 'ZONA C - Salida 🚪' : distSpawn<12 ? 'ZONA A - Exterior 🌳' : 'ZONA B - Interior 🏰';
     const distDoor=Math.round(distExit);
-    ui.setHUD({levelName:`${this.lv.emoji} Nivel ${this.idx+1} - ${this.lv.name}`, keys:this.player.keysGot, totalKeys:needKeys, gens:this.player.gensGot, totalGens:needGens, lives:this.player.lives, time:Math.floor(this.elapsed), monsterText:m.chasing?'👹 ¡TE VE! CORRE!':m.state==='INVESTIGATE'?'👹 Te busca...':'👹 Lejos', dist:distDoor, compassText:`${zone} • 🚪 ${distDoor}m • 👹 ${Math.round(m.dist)}m`, stamina:Math.round(this.player.stamina), battery:Math.round(this.player.battery), inventory:this.player.inventory.join(', ')});
+    const mTxt = m.chasing ? '👹 ¡TE VE! ¡APAGA LUZ O ESCÓNDETE!' : m.state==='INVESTIGATE' ? '👹 Te busca en sombras...' : (!this.player.lightOn && m.dist<18 ? '👹 No te ve (Linterna OFF)' : '👹 Lejos');
+    ui.setHUD({levelName:`${this.lv.emoji} Nivel ${this.idx+1} - ${this.lv.name}`, keys:this.player.keysGot, totalKeys:needKeys, gens:this.player.gensGot, totalGens:needGens, lives:this.player.lives, time:Math.floor(this.elapsed), monsterText:mTxt, dist:distDoor, compassText:`${zone} • 🚪 ${distDoor}m • 👹 ${Math.round(m.dist)}m`, stamina:Math.round(this.player.stamina), battery:Math.round(this.player.battery), inventory:this.player.inventory.join(', ')});
     // Interactuable cerca?
     const nearGen=this.levelData.generators.some(g=>!g.done && Math.hypot(g.x-p.x,g.z-p.z)<2.2);
     const nearLocker=this.levelData.hideSpots.some(h=>h.isLocker && Math.hypot(h.x-p.x,h.z-p.z)<2);

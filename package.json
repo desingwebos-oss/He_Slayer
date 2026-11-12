@@ -1,1 +1,8 @@
-{}
+{
+  "name": "he-slayer",
+  "version": "5.0.0",
+  "description": "HELENA - Cazadora de Misterios (Juego 3D Modular Web)",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

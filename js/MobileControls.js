@@ -26,7 +26,7 @@ export class MobileControls {
     joy.addEventListener('mousedown',start); window.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
   }
   bindButtons(cb){
-    const safe=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
+    const safe=(id,fn)=>{ const el=document.getElementById(id); if(!el) return; el.onclick=fn; el.addEventListener('touchstart', e=>{ e.preventDefault(); fn(); }, {passive:false}); };
     const bindHold=(id, on, off)=>{ const el=document.getElementById(id); if(!el) return; if(el._h){ el.removeEventListener('touchstart',el._h.ts); el.removeEventListener('touchend',el._h.off); el.removeEventListener('mousedown',el._h.on); el.removeEventListener('mouseup',el._h.off); } const ts=e=>{e.preventDefault(); on();}; el._h={ts,on,off}; el.addEventListener('touchstart',ts,{passive:false}); el.addEventListener('touchend',off); el.addEventListener('mousedown',on); el.addEventListener('mouseup',off); };
     bindHold('btnRun',()=>this.run=true,()=>this.run=false);
     bindHold('btnCrouch',()=>{this.crouch=true; cb.onCrouch&&cb.onCrouch(true);},()=>{this.crouch=false; cb.onCrouch&&cb.onCrouch(false);});
@@ -37,6 +37,7 @@ export class MobileControls {
     safe('btnPause',()=>cb.onPause&&cb.onPause());
     safe('btnFull',()=>this.goFullscreen());
     safe('btnFullHome',()=>this.goFullscreen());
+    safe('btnView',()=>cb.onView&&cb.onView());
     safe('btnShoot',()=>cb.onShoot&&cb.onShoot());
     // tapStart YA NO EXISTE - no lo buscamos
   }

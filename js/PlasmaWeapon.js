@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 export class PlasmaWeapon {
   constructor(scene, camera, audio){
+    this.fp=false;
     this.scene=scene; this.camera=camera; this.audio=audio;
     this.energy=100; this.cooldown=0; this.damage=14;
     this.beam=null; this.muzzle=null;
@@ -20,10 +21,13 @@ export class PlasmaWeapon {
     g.position.set(0.28,-0.24,-0.55); g.rotation.y=-0.05;
     this.group=g;
     if(this.camera) this.camera.add(g);
-    const beamMat=new THREE.MeshBasicMaterial({color:0x00e5ff, transparent:true, opacity:0.9});
-    const beamGeo=new THREE.CylinderGeometry(0.03,0.03,1,8);
+    const beamMat=new THREE.MeshBasicMaterial({color:0x00ffff, transparent:true, opacity:0.95});
+    const beamGeo=new THREE.CylinderGeometry(0.06,0.06,1,8);
     this.beam=new THREE.Mesh(beamGeo, beamMat); this.beam.visible=false; this.scene.add(this.beam);
+    this.muzzleLight=new THREE.PointLight(0x00ffff, 0, 16);
+    this.scene.add(this.muzzleLight);
   }
+  setFirstPerson(v){ this.fp=v; if(this.group) this.group.visible=v; }
   canShoot(){ return this.cooldown<=0 && this.energy>=8; }
   shoot(camOrMonster, pos, monster){
     // Compat: main.js llama shoot(camera, pos, monster) ; otros llaman shoot(monster)
@@ -32,12 +36,20 @@ export class PlasmaWeapon {
     if(!this.canShoot()) return {hit:false, reason:'cooldown'};
     this.cooldown=0.35; this.energy=Math.max(0,this.energy-8);
     if(this.audio && this.audio.plasma) this.audio.plasma();
-    if(this.group){ this.group.position.z=-0.48; setTimeout(()=>{ if(this.group) this.group.position.z=-0.55; },80); }
-    if(this.core){ this.core.scale.setScalar(1.6); setTimeout(()=>{ if(this.core) this.core.scale.setScalar(1); },120); }
+    if(this.group){ this.group.position.z=-0.38; this.group.rotation.x=-0.22; setTimeout(()=>{ if(this.group){ this.group.position.z=-0.55; this.group.rotation.x=0; } },90); }
+    if(this.core){ this.core.scale.setScalar(2.0); setTimeout(()=>{ if(this.core) this.core.scale.setScalar(1); },120); }
     const dir=new THREE.Vector3(); this.camera.getWorldDirection(dir);
     const origin=this.camera.position.clone();
-    const end=origin.clone().add(dir.clone().multiplyScalar(22));
-    this.showBeam(origin, end);
+    const end=origin.clone().add(dir.clone().multiplyScalar(24));
+    let muzzle;
+    if(this.fp) muzzle=new THREE.Vector3(0.28,-0.22,-0.9).applyQuaternion(this.camera.quaternion).add(origin);
+    else muzzle=new THREE.Vector3(pos.x,1.4,pos.z).add(new THREE.Vector3(dir.x,0,dir.z).normalize().multiplyScalar(0.9));
+    this.showBeam(muzzle, end);
+    if(this.muzzleLight){
+      this.muzzleLight.position.copy(muzzle);
+      this.muzzleLight.intensity=22;
+      setTimeout(()=>{ if(this.muzzleLight) this.muzzleLight.intensity=0; },90);
+    }
     if(!mon || !mon.group) return {hit:false};
     const mp=mon.group.position.clone(); mp.y=1.8;
     const toMonster=mp.clone().sub(origin);
@@ -45,7 +57,7 @@ export class PlasmaWeapon {
     const angle=dir.angleTo(toMonster.clone().normalize());
     const hit = dist<26 && angle<0.35;
     if(hit && mon.takeDamage) mon.takeDamage(this.damage, origin);
-    return {hit, dist};
+    return {hit, dist, dir};
   }
   showBeam(from, to){
     const mid=from.clone().add(to).multiplyScalar(0.5);

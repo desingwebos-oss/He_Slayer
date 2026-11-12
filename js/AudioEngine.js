@@ -1,6 +1,19 @@
-// AudioEngine.js v4.3 - Completo: plasma + toggle + ensure
+// AudioEngine.js v5.0 - Auto-desbloqueo táctil para móviles + AudioContext
 export class AudioEngine {
-  constructor(){ this.ctx=null; this.muted=false; this.ambientNodes=[]; }
+  constructor(){
+    this.ctx=null; this.muted=false; this.ambientNodes=[];
+    if(typeof window !== 'undefined'){
+      const unlock = () => {
+        this.ensure();
+        window.removeEventListener('pointerdown', unlock);
+        window.removeEventListener('touchstart', unlock);
+        window.removeEventListener('keydown', unlock);
+      };
+      window.addEventListener('pointerdown', unlock, { passive:true });
+      window.addEventListener('touchstart', unlock, { passive:true });
+      window.addEventListener('keydown', unlock, { passive:true });
+    }
+  }
   ensure(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(this.ctx && this.ctx.state==='suspended') this.ctx.resume(); return this.ctx; }
   setMuted(m){ this.muted=m; }
   toggle(){ this.muted=!this.muted; const t=document.getElementById('muteTxt'); if(t) t.textContent=this.muted?'Sonido OFF':'Sonido ON'; return this.muted; }

@@ -39,6 +39,11 @@ button{font-family:inherit;cursor:pointer}
 .joy-label{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 3px #000;opacity:.9}
 .action-btn{position:absolute;pointer-events:auto;border:2px solid rgba(255,255,255,.4);background:rgba(0,0,0,.35);color:#fff;border-radius:50%;width:62px;height:62px;font-size:20px;display:grid;place-items:center;backdrop-filter:blur(4px);opacity:.6;touch-action:none}
 #btnRun{right:170px;bottom:178px}#btnCrouch{right:170px;bottom:98px}#btnHide{right:102px;bottom:98px}#btnLight{right:102px;bottom:178px}#btnInteract{right:16px;bottom:178px;width:70px;height:70px;background:rgba(255,215,0,.45)}#btnPause{top:10px;right:12px;width:44px;height:44px;font-size:16px}#btnFull{top:10px;right:64px;width:44px;height:44px;font-size:16px}
+#btnAim{right:16px;bottom:268px;width:58px;height:58px}
+#btnShoot{left:24px;bottom:185px;width:76px;height:76px;font-size:32px;background:rgba(0,229,255,.5);border:2px solid #00e5ff;box-shadow:0 0 16px rgba(0,229,255,.55);border-radius:50%;display:grid;place-items:center;z-index:35;touch-action:none}
+#btnShoot:active{background:rgba(0,229,255,.85);transform:scale(0.92)}
+#btnLight{transition:background .2s, border-color .2s, box-shadow .2s}
+#btnLight.on{background:rgba(255,215,0,.55) !important;border-color:#ffd700 !important;box-shadow:0 0 14px #ffd700 !important;opacity:1 !important}
 #msg{position:absolute;inset:0;display:none;place-items:center;background:rgba(0,0,0,.72);z-index:40;padding:16px}#msg.show{display:grid}#msgBox{background:#1a0f2e;border:1px solid #4c1d95;border-radius:18px;padding:20px;max-width:420px;width:100%;text-align:center}#msgBox h2{margin:6px 0}
 #vignette{position:absolute;inset:0;pointer-events:none;z-index:15;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);display:none}#vignette.show{display:block}
 #damage{position:absolute;inset:0;pointer-events:none;z-index:16;background:radial-gradient(ellipse at center,transparent 40%,rgba(220,38,38,.55) 100%);display:none}
@@ -51,3 +56,5 @@ button{font-family:inherit;cursor:pointer}
 /* v4.2 FIX: si el juego falla, home sigue visible */
 #gameCanvas{background:#0e1526}
 #home.screen.active{display:block !important}
+
+#btnView{right:170px;bottom:258px}

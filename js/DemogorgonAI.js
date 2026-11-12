@@ -14,7 +14,8 @@ export class DemogorgonAI {
     this.health=100; this.stun=0; this.maxHealth=100;
     this.buildMesh();
   }
-  takeDamage(dmg, fromPos){ this.health=Math.max(0,this.health-dmg); this.stun=0.8; if(this.audio) this.audio.roar(); const s=this.cfg.scale; this.group.scale.setScalar(s*1.08); setTimeout(()=>{ if(this.group) this.group.scale.setScalar(s); },150); if(this.health<=0){ this.health=this.maxHealth; const mp=this.group.position; mp.x+=8; mp.z+=8; } return this.health; }
+  takeDamage(dmg, fromPos){ this.health=Math.max(0,this.health-dmg); this.lastHitDead=this.health<=0; this.stun=0.8; if(this.audio) this.audio.roar(); const s=this.cfg.scale; this.group.scale.setScalar(s*1.08); setTimeout(()=>{ if(this.group) this.group.scale.setScalar(s); },150); if(this.health<=0){ this.health=this.maxHealth; const mp=this.group.position; mp.x+=8; mp.z+=8; } return this.health; }
+  flashHit(){ this.group.traverse(o=>{ if(o.isMesh&&o.material&&o.material.emissive){ if(o._e===undefined) o._e=o.material.emissive.getHex(); o.material.emissive.setHex(0xaa0000); } }); setTimeout(()=>{ if(this.group) this.group.traverse(o=>{ if(o.isMesh&&o._e!==undefined) o.material.emissive.setHex(o._e); }); },110); }
   buildMesh(){
     const mat=(c,e=0x000000)=>new THREE.MeshStandardMaterial({color:c, emissive:e, roughness:0.85});
     const g=new THREE.Group();
@@ -38,13 +39,40 @@ export class DemogorgonAI {
   update(dt, player, colliders){
     const f=dt/16.667; const mp=this.group.position; const pp=(player.pos||player.camera.position);
     const dist=this.distTo(pp);
-    const sees=dist<this.cfg.detect && !player.hidden && (player.lightOn ? true : dist<this.cfg.detect*0.6);
-    const hears=dist<this.cfg.hear && player.moving && !player.hidden && !player.crouching;
-    const wasChasing=this.chasing;
-    this.chasing=sees||hears;
-    if(this.chasing){ this.state='CHASE'; if(!wasChasing){ if(this.levelIdx===3) this.audio.roar(); else if(this.levelIdx===0) this.audio.click(); else this.audio.roar(); } }
-    else if(hears){ this.state='INVESTIGATE'; }
-    else if(this.state!=='PATROL' && !this.chasing) this.state='PATROL';
+    // VISION: Si la linterna esta apagada, ¡el monstruo NO te ve!
+    // Solo puede verte si la linterna esta encendida, o si estas a menos de 2.0m de contacto fisico
+    let sees = false;
+    if(!player.hidden){
+      if(player.lightOn){
+        sees = dist < this.cfg.detect;
+      } else {
+        sees = dist < 2.0;
+      }
+    }
+    // OIDO: Oye pasos si corres o caminas de pie cerca. Si estas agachado o quieto, no te oye.
+    const hears = !player.hidden && player.moving && !player.crouching && dist < (player.sprint ? this.cfg.hear : this.cfg.hear * 0.35);
+    const wasChasing = this.chasing;
+
+    // Si te perseguia y apagas la linterna y te alejas > 4.5m o te agachas: ¡pierde el rastro!
+    if(wasChasing && !player.lightOn && (dist > 4.5 || player.crouching || player.hidden)){
+      this.chasing = false;
+      this.state = 'INVESTIGATE';
+    } else {
+      this.chasing = sees || hears;
+    }
+
+    if(this.chasing){
+      this.state='CHASE';
+      if(!wasChasing){
+        if(this.levelIdx===3) this.audio.roar();
+        else if(this.levelIdx===0) this.audio.click();
+        else this.audio.roar();
+      }
+    } else if(hears || (wasChasing && !this.chasing)){
+      this.state='INVESTIGATE';
+    } else if(this.state!=='PATROL' && !this.chasing){
+      this.state='PATROL';
+    }
     if(this.stun>0){ this.stun-=dt/1000; this.group.rotation.y+=0.05; return {dist, chasing:false, state:'STUNNED', health:this.health}; }
     // Movimiento
     let ms=(this.cfg.speed*0.02 + (this.chasing?0.02:0))*f;

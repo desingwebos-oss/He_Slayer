@@ -3,7 +3,7 @@
 export class SaveSystem {
   constructor(key='helena_modular_v1'){
     this.key=key;
-    this.data={unlocked:0, stars:[0,0,0,0], bestTime:{}, collected:{}, completed:[]};
+    this.data={unlocked:0, stars:[0,0,0,0], bestTime:{}, collected:{}, completed:[], settings:{view:'third', blood:true}};
     this.load();
   }
   load(){ try{ const raw=localStorage.getItem(this.key); if(raw) this.data={...this.data, ...JSON.parse(raw)}; }catch(e){} return this.data; }

@@ -1,1 +1,71 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HELENA Diagnostico v4.5</title><style>body{background:#0b0716;color:#fff;font-family:system-ui,Arial;padding:16px}.ok{color:#22c55e}.bad{color:#ff5555}.box{background:#171029;border:1px solid #2e1a4a;border-radius:12px;padding:12px;margin:10px 0}button{background:#ffd700;border:0;padding:12px 18px;border-radius:12px;font-weight:900}</style></head><body><h1>🔍 HELENA Diagnostico v4.5</h1><p>Si JUGAR/NIVELES te mandan a negro, esta pagina dice que archivo falla.</p><div id="out"></div><button onclick="location.reload()">🔄 Probar de nuevo</button><script>async function check(u){try{const r=await fetch(u+'?v=4.5', {cache:'no-store'});const t=await r.text();return{ok:r.ok,status:r.status,len:t.length}}catch(e){return{ok:false,status:'ERROR '+e.message,len:0}}} (async()=>{const files=['index.html','css/style.css','js/main.js','js/UIManager.js','js/LevelManager.js','js/Textures.js','js/HelenaCharacter.js','js/PlayerController.js','js/DemogorgonAI.js','js/PlasmaWeapon.js','js/AudioEngine.js','js/SaveSystem.js','js/MobileControls.js','js/levels/Level1_Mansion.js','js/levels/Level2_Escuela.js','js/levels/Level3_Hospital.js','js/levels/Level4_Pueblo.js'];let h='';for(const f of files){const c=await check(f);h+=`<div class="box"><b>${f}</b> — <span class="${c.ok?'ok':'bad'}">${c.ok?'✅ OK '+c.status+' ('+c.len+' bytes)':'❌ FALLA '+c.status}</span></div>`}for(const cdn of ['https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js','https://unpkg.com/three@0.160.0/build/three.module.js','https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js']){ try{const r=await fetch(cdn,{cache:'no-store'}); h+=`<div class="box"><b>CDN ${cdn}</b> — <span class="${r.ok?'ok':'bad'}">${r.ok?'✅ OK':'❌ FALLA '+r.status}</span></div>`;}catch(e){ h+=`<div class="box"><b>CDN ${cdn}</b> — <span class="bad">❌ ${e.message}</span></div>`;} } try{const r=await fetch('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');h+=`<div class="box"><b>CDN Three.js</b> — <span class="${r.ok?'ok':'bad'}">${r.ok?'✅ OK':'❌ FALLA'}</span></div>`}catch(e){h+=`<div class="box"><b>CDN Three.js</b> — <span class="bad">❌ Sin internet / CDN bloqueado</span></div>`}document.getElementById('out').innerHTML=h})();</script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HELENA Diagnóstico v5.0</title>
+<style>
+body{background:#0b0716;color:#fff;font-family:system-ui,Arial;padding:16px}
+.ok{color:#22c55e}
+.bad{color:#ff5555}
+.box{background:#171029;border:1px solid #2e1a4a;border-radius:12px;padding:12px;margin:10px 0}
+button{background:#ffd700;border:0;padding:12px 18px;border-radius:12px;font-weight:900;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>🔍 HELENA Diagnóstico v5.0</h1>
+<p>Verifica que todos los archivos locales y CDN carguen con éxito.</p>
+<div id="out"></div>
+<button onclick="location.reload()">🔄 Probar de nuevo</button>
+<script>
+async function check(u){
+  try{
+    const r=await fetch(u+'?v=5.0', {cache:'no-store'});
+    const t=await r.text();
+    return{ok:r.ok,status:r.status,len:t.length};
+  }catch(e){
+    return{ok:false,status:'ERROR '+e.message,len:0};
+  }
+}
+(async()=>{
+  const files=[
+    'index.html',
+    'css/style.css',
+    'js/main.js',
+    'js/UIManager.js',
+    'js/LevelManager.js',
+    'js/Textures.js',
+    'js/HelenaCharacter.js',
+    'js/PlayerController.js',
+    'js/DemogorgonAI.js',
+    'js/PlasmaWeapon.js',
+    'js/AudioEngine.js',
+    'js/SaveSystem.js',
+    'js/BloodFX.js',
+    'js/MobileControls.js',
+    'js/levels/Level1_Mansion.js',
+    'js/levels/Level2_Escuela.js',
+    'js/levels/Level3_Hospital.js',
+    'js/levels/Level4_Pueblo.js'
+  ];
+  let h='';
+  for(const f of files){
+    const c=await check(f);
+    h+=`<div class="box"><b>${f}</b> — <span class="${c.ok?'ok':'bad'}">${c.ok?'✅ OK '+c.status+' ('+c.len+' bytes)':'❌ FALLA '+c.status}</span></div>`;
+  }
+  for(const cdn of [
+    'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js',
+    'https://unpkg.com/three@0.160.0/build/three.module.js'
+  ]){
+    try{
+      const r=await fetch(cdn,{cache:'no-store'});
+      h+=`<div class="box"><b>CDN ${cdn}</b> — <span class="${r.ok?'ok':'bad'}">${r.ok?'✅ OK':'❌ FALLA '+r.status}</span></div>`;
+    }catch(e){
+      h+=`<div class="box"><b>CDN ${cdn}</b> — <span class="bad">❌ ${e.message}</span></div>`;
+    }
+  }
+  document.getElementById('out').innerHTML=h;
+})();
+</script>
+</body>
+</html>

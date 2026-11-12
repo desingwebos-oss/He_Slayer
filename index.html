@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","cannon-es":"https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js","./js/SaveSystem.js":"./js/SaveSystem.js?v=4.8","./js/UIManager.js":"./js/UIManager.js?v=4.8","./js/AudioEngine.js":"./js/AudioEngine.js?v=4.8","./js/PlayerController.js":"./js/PlayerController.js?v=4.8","./js/DemogorgonAI.js":"./js/DemogorgonAI.js?v=4.8","./js/LevelManager.js":"./js/LevelManager.js?v=4.8","./js/MobileControls.js":"./js/MobileControls.js?v=4.8","./js/PlasmaWeapon.js":"./js/PlasmaWeapon.js?v=4.8","./js/HelenaCharacter.js":"./js/HelenaCharacter.js?v=4.8","./js/Textures.js":"./js/Textures.js?v=4.8","./js/levels/Level1_Mansion.js":"./js/levels/Level1_Mansion.js?v=4.8","./js/levels/Level2_Escuela.js":"./js/levels/Level2_Escuela.js?v=4.8","./js/levels/Level3_Hospital.js":"./js/levels/Level3_Hospital.js?v=4.8","./js/levels/Level4_Pueblo.js":"./js/levels/Level4_Pueblo.js?v=4.8"}}
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","./js/SaveSystem.js":"./js/SaveSystem.js?v=5.0","./js/UIManager.js":"./js/UIManager.js?v=5.0","./js/AudioEngine.js":"./js/AudioEngine.js?v=5.0","./js/PlayerController.js":"./js/PlayerController.js?v=5.0","./js/DemogorgonAI.js":"./js/DemogorgonAI.js?v=5.0","./js/LevelManager.js":"./js/LevelManager.js?v=5.0","./js/MobileControls.js":"./js/MobileControls.js?v=5.0","./js/PlasmaWeapon.js":"./js/PlasmaWeapon.js?v=5.0","./js/HelenaCharacter.js":"./js/HelenaCharacter.js?v=5.0","./js/Textures.js":"./js/Textures.js?v=5.0","./js/BloodFX.js":"./js/BloodFX.js?v=5.0","./js/levels/Level1_Mansion.js":"./js/levels/Level1_Mansion.js?v=5.0","./js/levels/Level2_Escuela.js":"./js/levels/Level2_Escuela.js?v=5.0","./js/levels/Level3_Hospital.js":"./js/levels/Level3_Hospital.js?v=5.0","./js/levels/Level4_Pueblo.js":"./js/levels/Level4_Pueblo.js?v=5.0"}}
 </script>
 
 <style>
@@ -83,14 +83,14 @@ document.addEventListener('DOMContentLoaded', function(){
     <div class="card"><div style="font-size:28px">🕹️</div><b>Dos joysticks celular</b><p class="small">Izquierdo: moverte X-Y. Derecho: mirar Z (girar + arriba/abajo). Semi-transparentes sobre pantalla, fullscreen.</p></div>
     <div class="card"><div style="font-size:28px">💾</div><b>Guardado local</b><p class="small">localStorage / JSON. Desbloqueo secuencial + 1 a 3 estrellas por tiempo y objetos.</p></div>
   </div>
-  <p class="small" style="text-align:center">v1 Modular • Nivel 1 jugable • Niveles 2-4 listos para agregar • Sin sangre • Para celular</p>
+  <p class="small" style="text-align:center">v1 Modular • Nivel 1 jugable • Niveles 2-4 listos para agregar • Efectos de sangre opcionales (tecla B) • Para celular</p>
 </div>
 
 <div id="levels" class="screen" style="display:none"><div class="topbar"><button class="btn btn-dark" onclick="window.showScreen('home')" data-nav="home">← Inicio</button><span>Elige tu misterio</span></div><div class="levels"><h2>🗺️ Elige escenario</h2><p class="small">Completa en orden. Cada nivel empieza afuera.</p><div id="levelList"></div><button class="btn-ghost" onclick="window.showScreen('home')" data-nav="home">Volver</button></div></div>
 
-<div id="how" class="screen" style="display:none"><div class="topbar"><button class="btn btn-dark" onclick="window.showScreen('home')" data-nav="home">← Inicio</button><span>Ayuda</span></div><div style="max-width:720px;margin:0 auto;padding:0 16px 20px"><div class="card"><b>🎯 Objetivo Nv1:</b> 3 llaves en jardín + mansión, luego puerta dorada.<br><br><b>📱 Celular:</b> Joystick IZQ = moverte (X-Y). Joystick DER = mirar (Z). Botones: 🏃 Correr, 🧎 Agacharse (sigilo), 🌿 Esconder, 🔦 Luz, ✋ Interactuar.<br><b>⌨️ Compu:</b> WASD mover, Shift correr, Ctrl agacharse, F linterna, E interactuar, P pausa.<br><br><b>👹 Nv1 Acechador:</b> Escala 1.0x, chasquidos, pierde rastro si apagas linterna y te agachas.</div><button class="btn-gold" onclick="window.showScreen('levels')" data-nav="levels">Entendido, ¡a jugar!</button></div></div>
+<div id="how" class="screen" style="display:none"><div class="topbar"><button class="btn btn-dark" onclick="window.showScreen('home')" data-nav="home">← Inicio</button><span>Ayuda</span></div><div style="max-width:720px;margin:0 auto;padding:0 16px 20px"><div class="card"><b>🎯 Objetivo Nv1:</b> 3 llaves en jardín + mansión, luego puerta dorada.<br><br><b>📱 Celular:</b> Joystick IZQ = moverte (X-Y). Joystick DER = mirar (Z). Botones: 🏃 Correr, 🧎 Agacharse (sigilo), 🌿 Esconder, 🔦 Luz, ✋ Interactuar.<br><b>⌨️ Compu:</b> WASD mover, Shift correr, Ctrl agacharse, F linterna, E interactuar, P pausa, <b>V cambiar vista</b> (Helena 3ra persona / arma 1ra persona), B sangre ON/OFF.<br><br><b>👹 Nv1 Acechador:</b> Escala 1.0x, chasquidos, pierde rastro si apagas linterna y te agachas.</div><button class="btn-gold" onclick="window.showScreen('levels')" data-nav="levels">Entendido, ¡a jugar!</button></div></div>
 
-<div id="introLevel" class="screen" style="display:none" style="padding:0"><div style="min-height:100%;display:flex;flex-direction:column"><div style="height:42vh;background:linear-gradient(180deg,#1a1030,#0b0716);display:grid;place-items:center;font-size:70px" id="introEmoji">🏰</div><div style="flex:1;background:#150826;padding:18px"><h2 id="introTitle">Mansión</h2><p id="introText" class="small"></p><button class="btn-gold" id="btnEnter">➡️ ENTRAR AL MUNDO ABIERTO</button><button class="btn-ghost" onclick="window.showScreen('levels')" data-nav="levels" style="margin-top:8px">← Volver</button></div></div></div>
+<div id="introLevel" class="screen" style="display:none;padding:0"><div style="min-height:100%;display:flex;flex-direction:column"><div style="height:42vh;background:linear-gradient(180deg,#1a1030,#0b0716);display:grid;place-items:center;font-size:70px" id="introEmoji">🏰</div><div style="flex:1;background:#150826;padding:18px"><h2 id="introTitle">Mansión</h2><p id="introText" class="small"></p><button class="btn-gold" id="btnEnter" onclick="if(window.startLevel)window.startLevel(0)">➡️ ENTRAR AL MUNDO ABIERTO</button><button class="btn-ghost" onclick="window.showScreen('levels')" data-nav="levels" style="margin-top:8px">← Volver</button></div></div></div>
 
 <div id="hud"><div class="hud-top"><span class="chip" id="hudLevel">🏰 Nivel 1</span><span class="chip">🔍 <span id="hudClues">0/3</span></span><span class="chip">🎒 <span id="hudInv">Vacío</span></span><span class="chip">❤️ <span id="hudLives">3</span></span><span class="chip">⏱️ <span id="hudTime">00:00</span></span><span class="chip" id="hudMonster">👹 Lejos</span></div><div id="compass">🏰 0m • 👹 0m</div></div>
 <div id="bars"><div class="bar-label">🏃 ESTAMINA</div><div class="bar"><i id="stamBar" style="width:100%"></i></div><div class="bar-label">🔦 BATERÍA</div><div class="bar battery"><i id="batBar" style="width:100%"></i></div></div>
@@ -101,11 +101,12 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="joy" id="joyMove"><div class="knob" id="knobMove">🕹️</div><div class="joy-label">MOVER X-Y</div></div>
   <div class="joy" id="joyLook"><div class="knob" id="knobLook">👀</div><div class="joy-label">MIRAR Z ↑↓</div></div>
   <button class="action-btn" id="btnRun" title="Correr">🏃</button>
+  <button class="action-btn" id="btnView" title="Cambiar vista (V)">🧍</button>
   <button class="action-btn" id="btnCrouch" title="Agacharse">🧎</button>
   <button class="action-btn" id="btnHide" title="Esconder">🌿</button>
-  <button class="action-btn" id="btnLight" title="Linterna">🔦</button>
-  <button class="action-btn" id="btnAim" title="Apuntar" style="right:16px;bottom:350px">🎯</button>
-  <button class="action-btn" id="btnShoot" title="Disparar plasma" style="background:rgba(0,229,255,.45);width:76px;height:76px;font-size:28px;right:16px;bottom:260px">🔫</button>
+  <button class="action-btn" id="btnLight" title="Linterna (F)">🔦</button>
+  <button class="action-btn" id="btnAim" title="Apuntar">🎯</button>
+  <button class="action-btn" id="btnShoot" title="Disparar plasma (Izquierda)">🔫</button>
   <button class="action-btn" id="btnInteract" title="Interactuar">✋</button>
   <button class="action-btn" id="btnPause" title="Pausa">⏸️</button>
   <button class="action-btn" id="btnFull" title="Fullscreen">⛶</button>
@@ -116,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </div>
 <div id="diagBox"></div>
 <script>window.__helenaLoaded=false;</script>
-<script type="module" src="js/main.js?v=4.8"></script>
+<script type="module" src="js/main.js?v=5.0"></script>
 </body>
 </html>
 
