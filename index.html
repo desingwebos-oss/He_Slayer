@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0716">
+<title>HELENA - Juego Propio Modular | v1 Nivel 1</title>
+<link rel="stylesheet" href="css/style.css?v=4.5">
+<link rel="manifest" href="manifest.webmanifest">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","cannon-es":"https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js","./js/SaveSystem.js":"./js/SaveSystem.js?v=4.7","./js/UIManager.js":"./js/UIManager.js?v=4.7","./js/AudioEngine.js":"./js/AudioEngine.js?v=4.7","./js/PlayerController.js":"./js/PlayerController.js?v=4.7","./js/DemogorgonAI.js":"./js/DemogorgonAI.js?v=4.7","./js/LevelManager.js":"./js/LevelManager.js?v=4.7","./js/MobileControls.js":"./js/MobileControls.js?v=4.7","./js/PlasmaWeapon.js":"./js/PlasmaWeapon.js?v=4.7","./js/HelenaCharacter.js":"./js/HelenaCharacter.js?v=4.7","./js/Textures.js":"./js/Textures.js?v=4.7","./js/levels/Level1_Mansion.js":"./js/levels/Level1_Mansion.js?v=4.7","./js/levels/Level2_Escuela.js":"./js/levels/Level2_Escuela.js?v=4.7","./js/levels/Level3_Hospital.js":"./js/levels/Level3_Hospital.js?v=4.7","./js/levels/Level4_Pueblo.js":"./js/levels/Level4_Pueblo.js?v=4.7"}}
+</script>
+
+<style>
+/* CSS CRITICO v4.5 - si css/style.css falla, home igual se ve */
+html,body{margin:0;background:#0b0716;color:#fff;font-family:system-ui,Arial;overflow:hidden;height:100%}
+#gameWrap{position:fixed;inset:0;background:#0b0716;overflow:hidden}
+#gameCanvas{position:absolute;inset:0;width:100%;height:100%;display:none;background:#0e1526}
+.screen{position:absolute;inset:0;overflow-y:auto;display:none;background:#0b0716;z-index:5}
+.screen.active{display:block !important}
+#gameWrap:has(#hud.show) .screen{display:none !important}
+#diagBox{position:fixed;left:10px;bottom:10px;z-index:100;background:rgba(0,0,0,.85);border:1px solid #a855f7;border-radius:10px;padding:8px 10px;font-size:11px;max-width:320px;display:none;white-space:pre-wrap}
+</style>
+<script>
+/* v4.5 MENU SIN DEPENDENCIAS - corre antes que cualquier modulo */
+window.showScreen = function(id){
+  var target = document.getElementById(id);
+  if(!target){ alert('No existe la pantalla '+id+'. Sube el index.html v4.5 completo.'); return false; }
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); s.style.display='none'; });
+  target.classList.add('active'); target.style.display='block';
+  window.scrollTo(0,0);
+  return true;
+};
+window.goHome = function(){ window.showScreen('home'); };
+window.goLevels = function(){ window.showScreen('levels'); };
+window.goHow = function(){ window.showScreen('how'); };
+window.goIntro = function(){ window.showScreen('introLevel'); };
+if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }); }
+if('caches' in window){ caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }); }
+// Al cargar, FORZAR home visible por estilo inline, no por clase
+document.addEventListener('DOMContentLoaded', function(){
+  var h=document.getElementById('home'); if(h){ h.style.display='block'; h.classList.add('active'); }
+  var c=document.getElementById('gameCanvas'); if(c) c.style.display='none';
+  // Si main.js no carga en 2s, avisar pero DEJAR home visible
+  setTimeout(function(){
+    var mb=document.getElementById('btnMute'); if(!window.__helenaMainOK && !(mb && mb.onclick)){
+      var d=document.getElementById('diagBox'); if(d){ d.style.display='block'; d.textContent='⚠️ main.js / CDN no cargó.\nEl MENÚ SÍ funciona sin 3D (JUGAR / NIVELES / CÓMO JUGAR).\nPara el 3D necesitas internet. Abre test.html para ver qué CDN falla.'; }
+      var hh=document.getElementById('home'); if(hh){ hh.style.display='block'; hh.classList.add('active'); }
+    } else {
+      var dd=document.getElementById('diagBox'); if(dd) dd.style.display='none';
+    }
+  }, 2000);
+});
+</script>
+</head>
+<body>
+<div id="gameWrap">
+<canvas id="gameCanvas" style="display:none"></canvas>
+<div id="vignette"></div><div id="damage"></div>
+
+<div id="home" class="screen active" style="display:block">
+  <div class="topbar"><div class="logo">🔦 HELENA <b>• MISTERIOS</b></div><button class="btn btn-dark" id="btnMute">🔊 <span id="muteTxt">Sonido ON</span></button></div>
+  <div class="hero"><div class="hero-card" style="background-image:url(assets/cover.jpg);background-size:cover;background-position:center;position:relative"><div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.65));border-radius:16px"></div><div style="position:relative">
+    <span class="pill">★ TERCERA PERSONA • ESTILO RE4 • ZONAS • THREE.JS + CANNON-ES • PARA CELULAR</span>
+    <h1>HELENA<br><span>CAZADORA</span><br>DE MISTERIOS</h1>
+    <p class="small">Tu juego propio en 3ra persona. Empiezas AFUERA en la ZONA A, entras al castillo ZONA B con niebla. Encuentra la entrada, cumple la misión y escapa. Progreso guardado localmente. El monstruo evoluciona por nivel.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn btn-play" id="btnPlay" onclick="window.showScreen('introLevel')">▶ JUGAR • NIVEL 1</button>
+      <button class="btn btn-white" id="btnLevels2" onclick="window.showScreen('levels')">🗺️ NIVELES</button>
+      <button class="btn btn-dark" id="btnHow" onclick="window.showScreen('how')">ⓘ CÓMO JUGAR</button>
+      <button class="btn btn-dark" id="btnFullHome" onclick="try{document.documentElement.requestFullscreen()}catch(e){}">⛶ FULLSCREEN</button>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap" class="small"><span>⭐ <b id="totalStars">0 / 12</b></span><span>🗺️ <b id="lvlUnlocked">1 de 4</b></span><span>📁 Modular: main / LevelManager / Player / Demogorgon / Audio / UI / Save</span></div>
+  </div></div>
+  <div class="cards">
+    <div class="card"><div style="font-size:28px">📁</div><b>Arquitectura modular</b><p class="small">Cada sistema en su archivo. Para agregar Nivel 2 solo creas <code>Level2_Escuela.js</code> y lo registras en LevelManager.</p></div>
+    <div class="card"><div style="font-size:28px">👹</div><b>Demogorgon FSM</b><p class="small">Patrulla → Investiga por sonido → Persecución → Ataque. Pétalos que se abren al cazar.</p></div>
+    <div class="card"><div style="font-size:28px">🕹️</div><b>Dos joysticks celular</b><p class="small">Izquierdo: moverte X-Y. Derecho: mirar Z (girar + arriba/abajo). Semi-transparentes sobre pantalla, fullscreen.</p></div>
+    <div class="card"><div style="font-size:28px">💾</div><b>Guardado local</b><p class="small">localStorage / JSON. Desbloqueo secuencial + 1 a 3 estrellas por tiempo y objetos.</p></div>
+  </div>
+  <p class="small" style="text-align:center">v1 Modular • Nivel 1 jugable • Niveles 2-4 listos para agregar • Sin sangre • Para celular</p>
+</div>
+
+<div id="levels" class="screen" style="display:none"><div class="topbar"><button class="btn btn-dark" onclick="window.showScreen('home')" data-nav="home">← Inicio</button><span>Elige tu misterio</span></div><div class="levels"><h2>🗺️ Elige escenario</h2><p class="small">Completa en orden. Cada nivel empieza afuera.</p><div id="levelList"></div><button class="btn-ghost" onclick="window.showScreen('home')" data-nav="home">Volver</button></div></div>
+
+<div id="how" class="screen" style="display:none"><div class="topbar"><button class="btn btn-dark" onclick="window.showScreen('home')" data-nav="home">← Inicio</button><span>Ayuda</span></div><div style="max-width:720px;margin:0 auto;padding:0 16px 20px"><div class="card"><b>🎯 Objetivo Nv1:</b> 3 llaves en jardín + mansión, luego puerta dorada.<br><br><b>📱 Celular:</b> Joystick IZQ = moverte (X-Y). Joystick DER = mirar (Z). Botones: 🏃 Correr, 🧎 Agacharse (sigilo), 🌿 Esconder, 🔦 Luz, ✋ Interactuar.<br><b>⌨️ Compu:</b> WASD mover, Shift correr, Ctrl agacharse, F linterna, E interactuar, P pausa.<br><br><b>👹 Nv1 Acechador:</b> Escala 1.0x, chasquidos, pierde rastro si apagas linterna y te agachas.</div><button class="btn-gold" onclick="window.showScreen('levels')" data-nav="levels">Entendido, ¡a jugar!</button></div></div>
+
+<div id="introLevel" class="screen" style="display:none" style="padding:0"><div style="min-height:100%;display:flex;flex-direction:column"><div style="height:42vh;background:linear-gradient(180deg,#1a1030,#0b0716);display:grid;place-items:center;font-size:70px" id="introEmoji">🏰</div><div style="flex:1;background:#150826;padding:18px"><h2 id="introTitle">Mansión</h2><p id="introText" class="small"></p><button class="btn-gold" id="btnEnter">➡️ ENTRAR AL MUNDO ABIERTO</button><button class="btn-ghost" onclick="window.showScreen('levels')" data-nav="levels" style="margin-top:8px">← Volver</button></div></div></div>
+
+<div id="hud"><div class="hud-top"><span class="chip" id="hudLevel">🏰 Nivel 1</span><span class="chip">🔍 <span id="hudClues">0/3</span></span><span class="chip">🎒 <span id="hudInv">Vacío</span></span><span class="chip">❤️ <span id="hudLives">3</span></span><span class="chip">⏱️ <span id="hudTime">00:00</span></span><span class="chip" id="hudMonster">👹 Lejos</span></div><div id="compass">🏰 0m • 👹 0m</div></div>
+<div id="bars"><div class="bar-label">🏃 ESTAMINA</div><div class="bar"><i id="stamBar" style="width:100%"></i></div><div class="bar-label">🔦 BATERÍA</div><div class="bar battery"><i id="batBar" style="width:100%"></i></div></div>
+<div id="alert">TE VIO! CORRE O ESCÓNDETE!</div>
+<div id="interact">✋ Pulsa E / ✋ para interactuar</div>
+
+<div id="controls">
+  <div class="joy" id="joyMove"><div class="knob" id="knobMove">🕹️</div><div class="joy-label">MOVER X-Y</div></div>
+  <div class="joy" id="joyLook"><div class="knob" id="knobLook">👀</div><div class="joy-label">MIRAR Z ↑↓</div></div>
+  <button class="action-btn" id="btnRun" title="Correr">🏃</button>
+  <button class="action-btn" id="btnCrouch" title="Agacharse">🧎</button>
+  <button class="action-btn" id="btnHide" title="Esconder">🌿</button>
+  <button class="action-btn" id="btnLight" title="Linterna">🔦</button>
+  <button class="action-btn" id="btnAim" title="Apuntar" style="right:16px;bottom:350px">🎯</button>
+  <button class="action-btn" id="btnShoot" title="Disparar plasma" style="background:rgba(0,229,255,.45);width:76px;height:76px;font-size:28px;right:16px;bottom:260px">🔫</button>
+  <button class="action-btn" id="btnInteract" title="Interactuar">✋</button>
+  <button class="action-btn" id="btnPause" title="Pausa">⏸️</button>
+  <button class="action-btn" id="btnFull" title="Fullscreen">⛶</button>
+</div>
+<div id="rotateHint">📱 Gira el celular en horizontal para jugar mejor ↔️</div>
+<div id="objective" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;pointer-events:none;z-index:18;opacity:0.7">+</div>
+<div id="msg"><div id="msgBox"></div></div>
+</div>
+<div id="diagBox"></div>
+<script>window.__helenaLoaded=false;</script>
+<script type="module" src="js/main.js?v=4.7"></script>
+</body>
+</html>
+
