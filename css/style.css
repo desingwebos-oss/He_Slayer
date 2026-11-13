@@ -52,7 +52,7 @@ button{font-family:inherit;cursor:pointer}
 .kt-near{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;font-weight:800}
 .kt-arrow{display:inline-block;width:22px;height:22px;line-height:22px;border-radius:50%;background:#ffd700;color:#1a0a00;font-size:12px;transition:transform .08s linear}
 #keyTracker.done .kt-arrow{background:#22c55e}
-.action-btn{position:absolute;pointer-events:auto;border:2px solid rgba(255,255,255,.4);background:rgba(0,0,0,.35);color:#fff;border-radius:50%;width:62px;height:62px;font-size:20px;display:grid;place-items:center;backdrop-filter:blur(4px);opacity:.6;touch-action:none}
+.action-btn{position:absolute;z-index:5;pointer-events:auto;border:2px solid rgba(255,255,255,.4);background:rgba(0,0,0,.35);color:#fff;border-radius:50%;width:62px;height:62px;font-size:20px;display:grid;place-items:center;backdrop-filter:blur(4px);opacity:.6;touch-action:none}
 #btnRun{right:170px;bottom:178px}#btnCrouch{right:170px;bottom:98px}#btnHide{right:102px;bottom:98px}#btnLight{right:102px;bottom:178px}#btnInteract{right:16px;bottom:178px;width:70px;height:70px;background:rgba(255,215,0,.45)}#btnPause{top:10px;right:12px;width:44px;height:44px;font-size:16px}#btnFull{top:10px;right:64px;width:44px;height:44px;font-size:16px}
 #btnAim{right:16px;bottom:268px;width:58px;height:58px}
 #btnShoot{left:24px;bottom:185px;width:76px;height:76px;font-size:32px;background:rgba(0,229,255,.5);border:2px solid #00e5ff;box-shadow:0 0 16px rgba(0,229,255,.55);border-radius:50%;display:grid;place-items:center;z-index:35;touch-action:none}
