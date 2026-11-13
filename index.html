@@ -3,121 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#150826">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0b0716">
-<title>HELENA - Juego Propio Modular | v1 Nivel 1</title>
-<link rel="stylesheet" href="css/style.css?v=4.5">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
-<script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/","./js/SaveSystem.js":"./js/SaveSystem.js?v=5.0","./js/UIManager.js":"./js/UIManager.js?v=5.0","./js/AudioEngine.js":"./js/AudioEngine.js?v=5.0","./js/PlayerController.js":"./js/PlayerController.js?v=5.0","./js/DemogorgonAI.js":"./js/DemogorgonAI.js?v=5.0","./js/LevelManager.js":"./js/LevelManager.js?v=5.0","./js/MobileControls.js":"./js/MobileControls.js?v=5.0","./js/PlasmaWeapon.js":"./js/PlasmaWeapon.js?v=5.0","./js/HelenaCharacter.js":"./js/HelenaCharacter.js?v=5.0","./js/Textures.js":"./js/Textures.js?v=5.0","./js/BloodFX.js":"./js/BloodFX.js?v=5.0","./js/levels/Level1_Mansion.js":"./js/levels/Level1_Mansion.js?v=5.0","./js/levels/Level2_Escuela.js":"./js/levels/Level2_Escuela.js?v=5.0","./js/levels/Level3_Hospital.js":"./js/levels/Level3_Hospital.js?v=5.0","./js/levels/Level4_Pueblo.js":"./js/levels/Level4_Pueblo.js?v=5.0"}}
-</script>
-
-<style>
-/* CSS CRITICO v4.5 - si css/style.css falla, home igual se ve */
-html,body{margin:0;background:#0b0716;color:#fff;font-family:system-ui,Arial;overflow:hidden;height:100%}
-#gameWrap{position:fixed;inset:0;background:#0b0716;overflow:hidden}
-#gameCanvas{position:absolute;inset:0;width:100%;height:100%;display:none;background:#0e1526}
-.screen{position:absolute;inset:0;overflow-y:auto;display:none;background:#0b0716;z-index:5}
-.screen.active{display:block !important}
-#gameWrap:has(#hud.show) .screen{display:none !important}
-#objective{display:none}
-#gameWrap:has(#hud.show) #objective{display:block}
-#diagBox{position:fixed;left:10px;bottom:10px;z-index:100;background:rgba(0,0,0,.85);border:1px solid #a855f7;border-radius:10px;padding:8px 10px;font-size:11px;max-width:320px;display:none;white-space:pre-wrap}
-</style>
-<script>
-/* v4.5 MENU SIN DEPENDENCIAS - corre antes que cualquier modulo */
-window.showScreen = function(id){
-  var target = document.getElementById(id);
-  if(!target){ alert('No existe la pantalla '+id+'. Sube el index.html v4.5 completo.'); return false; }
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); s.style.display='none'; });
-  target.classList.add('active'); target.style.display='block';
-  window.scrollTo(0,0);
-  return true;
-};
-window.goHome = function(){ window.showScreen('home'); };
-window.goLevels = function(){ window.showScreen('levels'); };
-window.goHow = function(){ window.showScreen('how'); };
-window.goIntro = function(){ window.showScreen('introLevel'); };
-if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }); }
-if('caches' in window){ caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }); }
-// Al cargar, FORZAR home visible por estilo inline, no por clase
-document.addEventListener('DOMContentLoaded', function(){
-  var h=document.getElementById('home'); if(h){ h.style.display='block'; h.classList.add('active'); }
-  var c=document.getElementById('gameCanvas'); if(c) c.style.display='none';
-  // Si main.js no carga en 2s, avisar pero DEJAR home visible
-  setTimeout(function(){
-    var mb=document.getElementById('btnMute'); if(!window.__helenaMainOK && !(mb && mb.onclick)){
-      var d=document.getElementById('diagBox'); if(d){ d.style.display='block'; d.textContent='⚠️ main.js / CDN no cargó.\nEl MENÚ SÍ funciona sin 3D (JUGAR / NIVELES / CÓMO JUGAR).\nPara el 3D necesitas internet. Abre test.html para ver qué CDN falla.'; }
-      var hh=document.getElementById('home'); if(hh){ hh.style.display='block'; hh.classList.add('active'); }
-    } else {
-      var dd=document.getElementById('diagBox'); if(dd) dd.style.display='none';
-    }
-  }, 2000);
-});
-</script>
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Helena Cazadora de Misterios</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="gameWrap">
-<canvas id="gameCanvas" style="display:none"></canvas>
-<div id="vignette"></div><div id="damage"></div>
 
-<div id="home" class="screen active" style="display:block">
-  <div class="topbar"><div class="logo">🔦 HELENA <b>• MISTERIOS</b></div><button class="btn btn-dark" id="btnMute">🔊 <span id="muteTxt">Sonido ON</span></button></div>
-  <div class="hero"><div class="hero-card" style="background-image:url(assets/cover.jpg);background-size:cover;background-position:center;position:relative"><div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.65));border-radius:16px"></div><div style="position:relative">
-    <span class="pill">★ TERCERA PERSONA • ESTILO RE4 • ZONAS • THREE.JS + CANNON-ES • PARA CELULAR</span>
-    <h1>HELENA<br><span>CAZADORA</span><br>DE MISTERIOS</h1>
-    <p class="small">Tu juego propio en 3ra persona. Empiezas AFUERA en la ZONA A, entras al castillo ZONA B con niebla. Encuentra la entrada, cumple la misión y escapa. Progreso guardado localmente. El monstruo evoluciona por nivel.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-      <button class="btn btn-play" id="btnPlay" onclick="window.showScreen('introLevel')">▶ JUGAR • NIVEL 1</button>
-      <button class="btn btn-white" id="btnLevels2" onclick="window.showScreen('levels')">🗺️ NIVELES</button>
-      <button class="btn btn-dark" id="btnHow" onclick="window.showScreen('how')">ⓘ CÓMO JUGAR</button>
-      <button class="btn btn-dark" id="btnFullHome" onclick="try{document.documentElement.requestFullscreen()}catch(e){}">⛶ FULLSCREEN</button>
+<div id="home" class="screen active">
+  <div class="topbar"><div></div><button class="iconbtn" onclick="toggleMute()">🔊</button></div>
+  <div class="hero-card">
+    <div class="hero-img">
+      <div class="resolve">✦ ¡A resolver! ✦</div>
+      <div class="girl" style="background:linear-gradient(180deg,#fff,#ffd6f0);padding:6px;overflow:hidden"><img id="helenaHero" src="assets/helena.png" style="width:100%;height:100%;object-fit:contain;display:block" alt="Helena kawaii"></div>
+      <div class="yo-puedo">¡Yo puedo!</div>
     </div>
-    <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap" class="small"><span>⭐ <b id="totalStars">0 / 12</b></span><span>🗺️ <b id="lvlUnlocked">1 de 4</b></span><span>📁 Modular: main / LevelManager / Player / Demogorgon / Audio / UI / Save</span></div>
-  </div></div></div>
-  <div class="cards">
-    <div class="card"><div style="font-size:28px">📁</div><b>Arquitectura modular</b><p class="small">Cada sistema en su archivo. Para agregar Nivel 2 solo creas <code>Level2_Escuela.js</code> y lo registras en LevelManager.</p></div>
-    <div class="card"><div style="font-size:28px">👹</div><b>Demogorgon FSM</b><p class="small">Patrulla → Investiga por sonido → Persecución → Ataque. Pétalos que se abren al cazar.</p></div>
-    <div class="card"><div style="font-size:28px">🕹️</div><b>Dos joysticks celular</b><p class="small">Izquierdo: moverte X-Y. Derecho: mirar Z (girar + arriba/abajo). Semi-transparentes sobre pantalla, fullscreen.</p></div>
-    <div class="card"><div style="font-size:28px">💾</div><b>Guardado local</b><p class="small">localStorage / JSON. Desbloqueo secuencial + 1 a 3 estrellas por tiempo y objetos.</p></div>
+    <div class="btn-row" style="justify-content:center;margin-top:12px">
+      <button class="btn btn-play" onclick="showLevels()">▶ JUGAR</button>
+      <button class="btn btn-white" onclick="showLevels()">🗺️ NIVELES</button>
+      <button class="btn btn-dark" onclick="showScreen('how')">ⓘ CÓMO JUGAR</button>
+    </div>
+    <div style="display:none"><span><b id="totalStars">0 / 12</b></span><span><b id="lvlUnlocked">1 de 4</b></span></div>
   </div>
-  <p class="small" style="text-align:center">v1 Modular • Nivel 1 jugable • Niveles 2-4 listos para agregar • Efectos de sangre opcionales (tecla B) • Para celular</p>
 </div>
 
-<div id="levels" class="screen" style="display:none"><div class="topbar"><button class="btn btn-dark" onclick="window.showScreen('home')" data-nav="home">← Inicio</button><span>Elige tu misterio</span></div><div class="levels"><h2>🗺️ Elige escenario</h2><p class="small">Completa en orden. Cada nivel empieza afuera.</p><div id="levelList"></div><button class="btn-ghost" onclick="window.showScreen('home')" data-nav="home">Volver</button></div></div>
-
-<div id="how" class="screen" style="display:none"><div class="topbar"><button class="btn btn-dark" onclick="window.showScreen('home')" data-nav="home">← Inicio</button><span>Ayuda</span></div><div style="max-width:720px;margin:0 auto;padding:0 16px 20px"><div class="card"><b>🎯 Objetivo Nv1:</b> 3 llaves en jardín + mansión, luego puerta dorada.<br><br><b>📱 Celular:</b> Joystick IZQ = moverte (X-Y). Joystick DER = mirar (Z). Botones: 🏃 Correr, 🧎 Agacharse (sigilo), 🌿 Esconder, 🔦 Luz, ✋ Interactuar.<br><b>⌨️ Compu:</b> WASD mover, Shift correr, Ctrl agacharse, F linterna, E interactuar, P pausa, <b>V cambiar vista</b> (Helena 3ra persona / arma 1ra persona), B sangre ON/OFF.<br><br><b>👹 Nv1 Acechador:</b> Escala 1.0x, chasquidos, pierde rastro si apagas linterna y te agachas.</div><button class="btn-gold" onclick="window.showScreen('levels')" data-nav="levels">Entendido, ¡a jugar!</button></div></div>
-
-<div id="introLevel" class="screen" style="display:none;padding:0"><div style="min-height:100%;display:flex;flex-direction:column"><div style="height:42vh;background:linear-gradient(180deg,#1a1030,#0b0716);display:grid;place-items:center;font-size:70px" id="introEmoji">🏰</div><div style="flex:1;background:#150826;padding:18px"><h2 id="introTitle">Mansión</h2><p id="introText" class="small"></p><button class="btn-gold" id="btnEnter" onclick="if(window.startLevel)window.startLevel(0)">➡️ ENTRAR AL MUNDO ABIERTO</button><button class="btn-ghost" onclick="window.showScreen('levels')" data-nav="levels" style="margin-top:8px">← Volver</button></div></div></div>
-
-<div id="hud"><div class="hud-top"><span class="chip" id="hudLevel">🏰 Nivel 1</span><span class="chip">🔍 <span id="hudClues">0/3</span></span><span class="chip">🎒 <span id="hudInv">Vacío</span></span><span class="chip">❤️ <span id="hudLives">3</span></span><span class="chip">⏱️ <span id="hudTime">00:00</span></span><span class="chip" id="hudMonster">👹 Lejos</span></div><div id="compass">🏰 0m • 👹 0m</div></div>
-<div id="bars"><div class="bar-label">🏃 ESTAMINA</div><div class="bar"><i id="stamBar" style="width:100%"></i></div><div class="bar-label">🔦 BATERÍA</div><div class="bar battery"><i id="batBar" style="width:100%"></i></div></div>
-<div id="alert">TE VIO! CORRE O ESCÓNDETE!</div>
-<div id="interact">✋ Pulsa E / ✋ para interactuar</div>
-
-<div id="controls">
-  <div class="joy" id="joyMove"><div class="knob" id="knobMove">🕹️</div><div class="joy-label">MOVER X-Y</div></div>
-  <div class="joy" id="joyLook"><div class="knob" id="knobLook">👀</div><div class="joy-label">MIRAR Z ↑↓</div></div>
-  <button class="action-btn" id="btnRun" title="Correr">🏃</button>
-  <button class="action-btn" id="btnView" title="Cambiar vista (V)">🧍</button>
-  <button class="action-btn" id="btnCrouch" title="Agacharse">🧎</button>
-  <button class="action-btn" id="btnHide" title="Esconder">🌿</button>
-  <button class="action-btn" id="btnLight" title="Linterna (F)">🔦</button>
-  <button class="action-btn" id="btnAim" title="Apuntar">🎯</button>
-  <button class="action-btn" id="btnShoot" title="Disparar plasma (Izquierda)">🔫</button>
-  <button class="action-btn" id="btnInteract" title="Interactuar">✋</button>
-  <button class="action-btn" id="btnPause" title="Pausa">⏸️</button>
-  <button class="action-btn" id="btnFull" title="Fullscreen">⛶</button>
+<div id="levels" class="screen">
+  <div class="topbar"><button class="btn btn-dark" onclick="showScreen('home')">← Inicio</button><span>Elige tu misterio</span></div>
+  <h2 style="margin:14px 0 4px">🗺️ Elige escenario</h2>
+  <p class="small">Completa en orden para desbloquear el siguiente.</p>
+  <div id="levelList"></div>
+  <button class="btn-ghost" onclick="showScreen('home')">Volver</button>
 </div>
-<div id="rotateHint">📱 Gira el celular en horizontal para jugar mejor ↔️</div>
-<div id="objective" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;pointer-events:none;z-index:18;opacity:0.7">+</div>
-<div id="msg"><div id="msgBox"></div></div>
+
+<div id="how" class="screen">
+  <div class="topbar"><button class="btn btn-dark" onclick="showScreen('home')">← Inicio</button><span>Ayuda</span></div>
+  <div class="how"><b style="color:#ffd700">🎯 Objetivo:</b> Recoge 5 pistas 🔍 + 3 llaves 🔑 y llega a la puerta 🚪.<br><br><b>🕹️ Celular:</b> Joystick izquierdo + botones CORRER, ESCONDERSE, LINTERNA.<br><b>⌨️ Compu:</b> WASD / flechas, Shift correr, E esconderse, F linterna, P pausa.<br><br><b>👹 Devorador:</b> Si te ve, te persigue. Escóndete en lo verde.<br><b>🔦 Linterna:</b> Apágala si está cerca, te ve menos.<br><b>❤️ Vidas:</b> 3 vidas. Si te atrapa, pierdes 1.<br><b>🕵️ Final:</b> Adivina quién era el impostor para ganar estrella.</div>
+  <button class="btn-gold" onclick="showLevels()">Entendido, ¡a jugar!</button>
 </div>
-<div id="diagBox"></div>
-<script>window.__helenaLoaded=false;</script>
-<script type="module" src="js/main.js?v=5.0"></script>
+
+<div id="gameScreen" class="screen">
+  <div id="hud"><span id="hudLevel">🏚️ Mansión</span><span>❤️ <b id="hudLives">3</b></span><span>🔍 <b id="hudClues">0/5</b></span><span>🔑 <b id="hudKeys">0/3</b></span><span>⏱️ <b id="hudTime">00:00</b></span><span>⚡ <b id="hudStam">100</b></span><button class="btn btn-dark" style="margin-left:auto;padding:6px 10px" onclick="togglePause()">⏸️</button></div>
+  <div class="progress"><i id="progBar"></i></div>
+  <div id="canvasWrap"><div id="alert">👹 ¡TE VIO! ¡CORRE O ESCÓNDETE!</div><div id="phaser"></div><div id="msg"><div id="msgBox"></div></div></div>
+  <div class="controls"><div id="joy"><div id="knob">🎮</div></div><div class="cbtns"><button class="cbtn dark" id="btnHide">🙈<br>ESCONDER</button><button class="cbtn" id="btnLight">🔦<br>LUZ</button><button class="cbtn pink" id="btnRun">🏃<br>CORRER</button></div></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
-
