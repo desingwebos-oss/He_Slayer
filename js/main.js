@@ -24,24 +24,24 @@ window.addEventListener('error',e=>{
   const box=document.getElementById('msgBox');
   if(box && !document.getElementById('msg')?.classList.contains('show')){
     const msg=document.getElementById('msg'); if(msg) msg.classList.add('show');
-    box.innerHTML=`<h2>⚠️ Ups, algo falló</h2><p class="small">${(e.message||'Error').slice(0,200)}</p><p class="small">Recarga con ?v=5.0 y asegúrate de subir TODOS los archivos del ZIP (no solo index.html).</p><button class="btn-gold" onclick="location.reload()">🔄 Recargar</button><button class="btn-ghost" onclick="document.getElementById('msg').classList.remove('show');document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('home').classList.add('active')">← Volver a Inicio</button>`;
+    console.error(e.message); box.innerHTML=`<h2>⚠️ Ups, algo salió mal</h2><p class="small">Recarga la página para continuar. Si el problema sigue, revisa tu conexión a internet.</p><button class="btn-gold" onclick="location.reload()">🔄 Recargar</button><button class="btn-ghost" onclick="document.getElementById('msg').classList.remove('show');document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('home').classList.add('active')">← Volver a Inicio</button>`;
   }
 });
 
-function showLevels(){ try{ ui.renderLevels(idx=>ui.showIntro(idx, startLevel)); const ok=ui.show('levels'); if(!ok) throw new Error('No existe #levels en index.html'); }catch(err){ console.error(err); alert('Error al abrir niveles: '+err.message+'\nVolviendo a Inicio.'); ui.show('home'); } }
+function showLevels(){ try{ ui.renderLevels(idx=>ui.showIntro(idx, startLevel)); const ok=ui.show('levels'); if(!ok) throw new Error('No existe #levels en index.html'); }catch(err){ console.error(err); alert('No se pudieron abrir los niveles. Volviendo a Inicio.'); ui.show('home'); } }
 function playNow(){ try{ ui.showIntro(0, startLevel); }catch(err){ console.error(err); ui.show('home'); } }
 function startLevel(idx){
   try{
     ui.hideMessage(); ui.showGameUI();
     if(game) game.destroy();
     game=new Game(idx); window.__game=game;
-    ui.showMessage(`<h2>${LEVELS[idx].emoji} Nivel ${idx+1}</h2><p class="small">${LEVELS[idx].story}</p><p><b>🎯 ${LEVELS[idx].keys?LEVELS[idx].keys+' llaves ':''}${LEVELS[idx].gens?LEVELS[idx].gens+' generadores ':''} + Puerta dorada</b></p><p class="small">🎥 Cámara en 3ra persona estilo RE4. 🔫 Disparo de plasma en botón IZQUIERDO. 🔦 Apaga la linterna para que el monstruo NO te vea.</p><button class="btn-gold" id="btnGo">¡Vamos, Helena!</button>`,false);
+    ui.showMessage(`<h2>${LEVELS[idx].emoji} Nivel ${idx+1}</h2><p class="small">${LEVELS[idx].story}</p><p><b>🎯 ${LEVELS[idx].keys?LEVELS[idx].keys+' llaves ':''}${LEVELS[idx].gens?LEVELS[idx].gens+' generadores ':''} + Puerta dorada</b></p><p class="small">🔫 Dispara plasma con el botón izquierdo. 🔦 Apaga la linterna para que el monstruo no te vea. 🔑 Sigue la flecha del indicador para hallar las llaves.</p><button class="btn-gold" id="btnGo">¡Vamos, Helena!</button>`,false);
     const btn=document.getElementById('btnGo'); if(btn) btn.onclick=()=>{ ui.hideMessage(); game.paused=false; };
     game.paused=true;
   }catch(err){
     console.error(err);
     ui.hideGameUI(); ui.show('home');
-    ui.showMessage(`<h2>⚠️ No se pudo cargar el nivel</h2><p class="small">${err.message}</p><button class="btn-gold" onclick="location.reload()">🔄 Recargar</button><button class="btn-ghost" onclick="document.getElementById('msg').classList.remove('show')">← Volver a Inicio</button>`);
+    ui.showMessage(`<h2>⚠️ No se pudo cargar el nivel</h2><p class="small">Revisa tu conexión a internet e inténtalo de nuevo.</p><button class="btn-gold" onclick="location.reload()">🔄 Recargar</button><button class="btn-ghost" onclick="document.getElementById('msg').classList.remove('show')">← Volver a Inicio</button>`);
   }
 }
 window.startLevel = startLevel;
@@ -164,7 +164,7 @@ class Game {
     // Recoger llaves (distancia a Helena, no a la camara)
     const p=this.player.pos;
     this.levelData.pickups.forEach(pk=>{
-      if(!pk.taken && Math.hypot(pk.x-p.x,pk.z-p.z)<1.6){ pk.taken=true; pk.mesh.visible=false; this.player.addKey(); audio.beep(880); }
+      if(!pk.taken && Math.hypot(pk.x-p.x,pk.z-p.z)<1.6){ pk.taken=true; pk.mesh.visible=false; if(pk.beacon) pk.beacon.visible=false; this.player.addKey(); audio.beep(880); toast('🔑 Llave '+this.player.keysGot+' de '+this.lv.keys); }
     });
     // Puerta se abre cuando tienes todo
     const needKeys=this.lv.keys, needGens=this.lv.gens;
@@ -180,6 +180,17 @@ class Game {
     const distDoor=Math.round(distExit);
     const mTxt = m.chasing ? '👹 ¡TE VE! ¡APAGA LUZ O ESCÓNDETE!' : m.state==='INVESTIGATE' ? '👹 Te busca en sombras...' : (!this.player.lightOn && m.dist<18 ? '👹 No te ve (Linterna OFF)' : '👹 Lejos');
     ui.setHUD({levelName:`${this.lv.emoji} Nivel ${this.idx+1} - ${this.lv.name}`, keys:this.player.keysGot, totalKeys:needKeys, gens:this.player.gensGot, totalGens:needGens, lives:this.player.lives, time:Math.floor(this.elapsed), monsterText:mTxt, dist:distDoor, compassText:`${zone} • 🚪 ${distDoor}m • 👹 ${Math.round(m.dist)}m`, stamina:Math.round(this.player.stamina), battery:Math.round(this.player.battery), inventory:this.player.inventory.join(', ')});
+    // Indicador de llaves: apunta a la llave pendiente mas cercana (luego generador / puerta)
+    {
+      const fx2=Math.sin(this.player.yaw), fz2=Math.cos(this.player.yaw);
+      const nearest=(list)=>{ let best=null,bd=1e9; list.forEach(o=>{ const d=Math.hypot(o.x-p.x,o.z-p.z); if(d<bd){bd=d;best=o;} }); return best?{o:best,d:bd}:null; };
+      const aim=(o,d,label)=>({ dist:d, label, angle:Math.atan2(-(o.x-p.x)*fz2+(o.z-p.z)*fx2, (o.x-p.x)*fx2+(o.z-p.z)*fz2) });
+      let target=null;
+      const k=nearest(this.levelData.pickups.filter(q=>!q.taken));
+      if(k) target=aim(k.o,k.d,'Llave a');
+      else { const g=nearest(this.levelData.generators.filter(q=>!q.done)); if(g) target=aim(g.o,g.d,'Generador a'); else if(this.exitOpen) target=aim(this.levelData.exitPos,distExit,'Puerta a'); }
+      ui.setKeyTracker({got:this.player.keysGot, total:needKeys, target});
+    }
     // Interactuable cerca?
     const nearGen=this.levelData.generators.some(g=>!g.done && Math.hypot(g.x-p.x,g.z-p.z)<2.2);
     const nearLocker=this.levelData.hideSpots.some(h=>h.isLocker && Math.hypot(h.x-p.x,h.z-p.z)<2);

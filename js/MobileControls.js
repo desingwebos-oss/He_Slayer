@@ -6,24 +6,52 @@ export class MobileControls {
     this.move={x:0,y:0,active:false}; this.look={x:0,y:0,active:false};
     this.run=false; this.crouch=false; this.aiming=false;
     this.isTouch='ontouchstart' in window;
-    this.bindJoystick('joyMove','knobMove',this.move);
-    this.bindJoystick('joyLook','knobLook',this.look);
+    this.bindJoystick('zoneMove','baseMove','knobMove',this.move,{radius:58,curve:1});
+    this.bindJoystick('zoneLook','baseLook','knobLook',this.look,{radius:64,curve:1.35});
     document.addEventListener('touchmove',e=>{
       if(e.target.closest('#home')||e.target.closest('#levels')||e.target.closest('#how')||e.target.closest('#introLevel')) return;
       e.preventDefault();
     },{passive:false});
   }
-  bindJoystick(joyId, knobId, store){
-    const joy=document.getElementById(joyId), knob=document.getElementById(knobId);
-    if(!joy||!knob) return;
-    let pid=null,cx=0,cy=0;
-    const start=e=>{ const t=e.changedTouches?e.changedTouches[0]:e; pid=t.identifier!==undefined?t.identifier:'mouse'; const r=joy.getBoundingClientRect(); cx=r.left+r.width/2; cy=r.top+r.height/2; store.active=true; };
-    const move=e=>{ let t=e; if(e.changedTouches){ for(const tt of e.changedTouches) if(tt.identifier===pid) t=tt; if(t.identifier!==pid) return; } else if(pid!=='mouse') return; let dx=(t.clientX-cx)/55, dy=(t.clientY-cy)/55; const l=Math.hypot(dx,dy); if(l>1){dx/=l;dy/=l;} store.x=dx; store.y=dy; knob.style.transform=`translate(${dx*32}px,${dy*32}px)`; };
-    const end=()=>{ store.x=0; store.y=0; store.active=false; knob.style.transform=''; pid=null; };
-    joy.addEventListener('touchstart',start,{passive:true});
-    joy.addEventListener('touchmove',e=>{e.preventDefault();move(e);},{passive:false});
-    joy.addEventListener('touchend',end);
-    joy.addEventListener('mousedown',start); window.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
+  // Joystick DINAMICO: aparece donde pones el dedo dentro de su mitad de pantalla y,
+  // si te alejas mas del radio, la base te sigue (nunca se "acaba" el recorrido).
+  bindJoystick(zoneId, baseId, knobId, store, opt={}){
+    const zone=document.getElementById(zoneId), base=document.getElementById(baseId), knob=document.getElementById(knobId);
+    if(!zone||!base||!knob) return;
+    const R=opt.radius||60, curve=opt.curve||1, dead=0.08;
+    let pid=null, ox=0, oy=0;
+    const place=()=>{ const zr=zone.getBoundingClientRect(); base.style.left=(ox-zr.left)+'px'; base.style.top=(oy-zr.top)+'px'; };
+    const start=e=>{
+      if(pid!==null) return;
+      pid=e.pointerId; ox=e.clientX; oy=e.clientY;
+      try{ zone.setPointerCapture(pid); }catch(_){}
+      place(); knob.style.transform='translate(0px,0px)';
+      zone.classList.add('on'); store.active=true; store.x=0; store.y=0;
+      e.preventDefault();
+    };
+    const move=e=>{
+      if(e.pointerId!==pid) return;
+      let dx=e.clientX-ox, dy=e.clientY-oy; const d=Math.hypot(dx,dy);
+      if(d>R){ const k=(d-R)/d; ox+=dx*k; oy+=dy*k; place(); dx=e.clientX-ox; dy=e.clientY-oy; }
+      let m=Math.min(1,Math.hypot(dx,dy)/R);
+      knob.style.transform=`translate(${dx}px,${dy}px)`;
+      if(m<dead){ store.x=0; store.y=0; return; }
+      const out=Math.pow((m-dead)/(1-dead),curve);
+      const ang=Math.atan2(dy,dx);
+      store.x=Math.cos(ang)*out; store.y=Math.sin(ang)*out;
+      e.preventDefault();
+    };
+    const end=e=>{
+      if(e.pointerId!==pid) return;
+      pid=null; store.x=0; store.y=0; store.active=false;
+      knob.style.transform=''; zone.classList.remove('on');
+    };
+    zone.addEventListener('pointerdown',start);
+    zone.addEventListener('pointermove',move);
+    zone.addEventListener('pointerup',end);
+    zone.addEventListener('pointercancel',end);
+    zone.addEventListener('lostpointercapture',end);
+    zone.addEventListener('contextmenu',e=>e.preventDefault());
   }
   bindButtons(cb){
     const safe=(id,fn)=>{ const el=document.getElementById(id); if(!el) return; el.onclick=fn; el.addEventListener('touchstart', e=>{ e.preventDefault(); fn(); }, {passive:false}); };

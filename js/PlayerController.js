@@ -45,7 +45,7 @@ export class PlayerController {
     this.stamina=wantRun?Math.max(0,this.stamina-0.5*f):Math.min(100,this.stamina+0.35*f);
     let sp=(this.sprint?0.16:0.09)*f; if(this.hidden) sp*=0.3; if(this.crouching) sp*=0.55; if(this.aiming) sp*=0.6;
     // Movimiento relativo a yaw de camara
-    const fx=Math.sin(this.yaw), fz=Math.cos(this.yaw), sx=Math.cos(this.yaw), sz=-Math.sin(this.yaw);
+    const fx=Math.sin(this.yaw), fz=Math.cos(this.yaw), sx=-Math.cos(this.yaw), sz=Math.sin(this.yaw);
     const mx=(fx*fwd+sx*strafe)*sp*2.2, mz=(fz*fwd+sz*strafe)*sp*2.2;
     const cur=this.character?this.character.group.position:this.pos;
     const nx=cur.x+mx, nz=cur.z+mz;

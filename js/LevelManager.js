@@ -29,7 +29,7 @@ export class LevelManager {
     else if(idx===2) data=buildLevel3(this.scene, helpers);
     else if(idx===3) data=buildLevel4(this.scene, helpers);
     this.colliders=data.colliders; this.flickerLights=data.flickerLights; this.hideSpots=data.hideSpots; this.exitPos=data.exitPos; this.spawn=data.spawn;
-    data.keyPos.forEach(p=>{ const m=helpers.sph(this.scene,0.45,0xffd700,p.x,1.5,p.z,0xffd700); this.pickups.push({mesh:m,x:p.x,z:p.z,type:'key',taken:false}); });
+    data.keyPos.forEach(p=>{ const m=helpers.sph(this.scene,0.45,0xffd700,p.x,1.5,p.z,0xffd700); const beacon=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,14,10,1,true), new THREE.MeshBasicMaterial({color:0xffd700,transparent:true,opacity:0.28,depthWrite:false,side:THREE.DoubleSide})); beacon.position.set(p.x,7,p.z); this.scene.add(beacon); this.pickups.push({mesh:m,beacon,x:p.x,z:p.z,type:'key',taken:false}); });
     data.genPos.forEach(p=>{ const m=helpers.box(this.scene,1.2,1.6,0.8,0x2a4a2a,p.x,0.8,p.z,false,this.colliders); const l=helpers.sph(this.scene,0.2,0xff0000,p.x,1.9,p.z,0xff0000); this.generators.push({mesh:m,light:l,x:p.x,z:p.z,done:false}); });
     const portal=helpers.box(this.scene,2.5,3.5,0.4,0xffd700,this.exitPos.x,1.75,this.exitPos.z,false,this.colliders); portal.material.emissive=new THREE.Color(0xffd700); this.exitMesh=portal;
     this.doorLight=new THREE.PointLight(0xffd700,0.8,15); this.doorLight.position.set(this.exitPos.x,2,this.exitPos.z); this.scene.add(this.doorLight);

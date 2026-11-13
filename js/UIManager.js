@@ -60,6 +60,25 @@ export class UIManager {
     const s=document.getElementById('stamBar'); if(s) s.style.width=stamina+'%'; const b=document.getElementById('batBar'); if(b) b.style.width=battery+'%';
     const a=document.getElementById('alert'); if(a) a.style.display=monsterText.includes('TE VE')?'block':'none';
   }
+  // Indicador de llaves: casillas (recogida / pendiente) + flecha hacia el objetivo mas cercano
+  setKeyTracker({got,total,target}){
+    const box=document.getElementById('keyTracker'); if(!box) return;
+    const cnt=document.getElementById('ktCount'); if(cnt) cnt.textContent=got+'/'+total;
+    const slots=document.getElementById('ktSlots');
+    if(slots){
+      if(slots.children.length!==total){ slots.innerHTML=''; for(let i=0;i<total;i++){ const sp=document.createElement('span'); sp.textContent='🔑'; slots.appendChild(sp); } }
+      for(let i=0;i<total;i++) slots.children[i].classList.toggle('got', i<got);
+    }
+    box.classList.toggle('done', got>=total);
+    const arrow=document.getElementById('ktArrow'), txt=document.getElementById('ktText');
+    if(target){
+      if(arrow){ arrow.style.display='inline-block'; arrow.style.transform='rotate('+target.angle+'rad)'; }
+      if(txt) txt.textContent=target.label+' '+Math.round(target.dist)+' m';
+    } else {
+      if(arrow) arrow.style.display='none';
+      if(txt) txt.textContent='¡Listo!';
+    }
+  }
   showInteract(show){ const el=document.getElementById('interact'); if(el) el.style.display=show?'block':'none'; }
   showDamage(){ const d=document.getElementById('damage'); if(!d) return; d.style.display='block'; setTimeout(()=>d.style.display='none',400); }
 }
