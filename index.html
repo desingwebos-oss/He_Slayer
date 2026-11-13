@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0b0716">
 <title>HELENA - Cazadora de Misterios</title>
-<link rel="stylesheet" href="css/style.css?v=5.2">
+<link rel="stylesheet" href="css/style.css?v=5.3">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <script type="importmap">
@@ -22,6 +22,8 @@ html,body{margin:0;background:#0b0716;color:#fff;font-family:system-ui,Arial;ove
 .screen{position:absolute;inset:0;overflow-y:auto;display:none;background:#0b0716;z-index:5}
 .screen.active{display:block !important}
 #gameWrap:has(#hud.show) .screen{display:none !important}
+#controls .zone{z-index:0 !important}
+#controls .action-btn{z-index:35 !important}
 #objective{display:none}
 #gameWrap:has(#hud.show) #objective{display:block}
 #diagBox{position:fixed;left:10px;bottom:10px;z-index:100;background:rgba(0,0,0,.85);border:1px solid #a855f7;border-radius:10px;padding:8px 10px;font-size:11px;max-width:320px;display:none;white-space:pre-wrap}
